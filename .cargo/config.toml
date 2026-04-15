@@ -6,4 +6,4 @@ rustflags = [
     "-C", "link-arg=-Tsrc/linker.ld",
 ]
 
-runner = "qemu-system-aarch64 -M raspi3b -nographic -kernel"
+runner = "qemu-system-aarch64 -M raspi3b -nographic -semihosting -kernel"
