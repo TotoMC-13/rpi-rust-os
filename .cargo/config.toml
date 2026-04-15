@@ -1,0 +1,9 @@
+[build]
+target = "aarch64-unknown-none"
+
+[target.aarch64-unknown-none]
+rustflags = [
+    "-C", "link-arg=-Tsrc/linker.ld",
+]
+
+runner = "qemu-system-aarch64 -M raspi3b -nographic -kernel"
