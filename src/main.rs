@@ -4,10 +4,8 @@
 use core::arch::global_asm;
 use core::panic::PanicInfo;
 
-// Incluir el código de arranque en ensamblador
 global_asm!(include_str!("boot.S"));
 
-// Importamos las macros de la raíz del crate
 use rpi_mini_os::println;
 use rpi_mini_os::uart::Uart;
 

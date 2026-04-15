@@ -2,17 +2,15 @@ use core::fmt::{self, Write};
 use lazy_static::lazy_static;
 use spin::Mutex;
 
-const UART0_BASE: u32 = 0x3F20_1000; // Dirección base para Pi 3
+const UART0_BASE: u32 = 0x3F20_1000; // Direccion base para Pi 3
 const UART0_DR: *mut u32 = UART0_BASE as *mut u32;
 const UART0_FR: *const u32 = (UART0_BASE + 0x18) as *const u32; // Offset 0x18 para Banderas
 const UART0_CR: *mut u32 = (UART0_BASE + 0x30) as *mut u32; // Offset 0x30 para Control
-
 const FR_TXFF: u32 = 1 << 5; // Bit 5: Transmit FIFO Full
 const FR_RXFE: u32 = 1 << 4; // Bit 4: Receive FIFO Empty
 
 pub struct Uart;
 
-// Implementación de los métodos que ya tenías
 impl Uart {
     pub fn init() {
         unsafe {
