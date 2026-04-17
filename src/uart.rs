@@ -14,11 +14,11 @@ pub struct Uart;
 impl Uart {
     pub fn init() {
         unsafe {
-            // 1. Apagamos el UART para configurar
+            // Turn UART off to configure
             core::ptr::write_volatile(UART0_CR, 0);
 
-            // 2. Encendemos: Bit 0 (Enable), Bit 8 (TXE), Bit 9 (RXE)
-            // Esto equivale al valor hexadecimal 0x301
+            // Turn on: Bit 0 (Enable), Bit 8 (TXE), Bit 9 (RXE)
+            // Its equal top hexadecimal 0x301
             let bits_encendido = (1 << 0) | (1 << 8) | (1 << 9);
             core::ptr::write_volatile(UART0_CR, bits_encendido);
         }
@@ -65,12 +65,12 @@ pub fn _print(args: fmt::Arguments) {
 }
 
 #[macro_export]
-macro_rules! print {
+macro_rules! serial_print {
     ($($arg:tt)*) => ($crate::uart::_print(format_args!($($arg)*)));
 }
 
 #[macro_export]
-macro_rules! println {
-    () => ($crate::print!("\n"));
-    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+macro_rules! serial_println {
+    () => ($crate::serial_print!("\n"));
+    ($($arg:tt)*) => ($crate::serial_print!("{}\n", format_args!($($arg)*)));
 }

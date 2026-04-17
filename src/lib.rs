@@ -7,6 +7,8 @@
 use crate::uart::Uart;
 use core::panic::PanicInfo;
 
+pub mod framebuffer;
+pub mod graphics;
 pub mod uart;
 
 pub trait Testable {
@@ -19,15 +21,15 @@ where
 {
     fn run(&self) {
         Uart::init();
-        print!("{}...\t", core::any::type_name::<T>());
+        serial_print!("{}...\t", core::any::type_name::<T>());
         self();
-        println!("[ok]");
+        serial_println!("[ok]");
     }
 }
 
 pub fn test_runner(tests: &[&dyn Testable]) {
     Uart::init();
-    println!("Running {} tests", tests.len());
+    serial_println!("Running {} tests", tests.len());
     for test in tests {
         test.run();
     }
@@ -35,13 +37,13 @@ pub fn test_runner(tests: &[&dyn Testable]) {
 }
 
 pub fn test_panic_handler(info: &PanicInfo) -> ! {
-    println!("[failed]\n");
-    println!("Error: {}\n", info);
+    serial_println!("[failed]\n");
+    serial_println!("Error: {}\n", info);
     exit_qemu(QemuExitCode::Failed);
     loop {}
 }
 
-// Punto de entrada para `cargo test`
+// Entry point for `cargo test`
 #[cfg(test)]
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
@@ -64,8 +66,8 @@ pub enum QemuExitCode {
 
 pub fn exit_qemu(exit_code: QemuExitCode) {
     // AArch64 semihosting: SYS_EXIT (0x18)
-    // x0 = num de operacion (0x18)
-    // x1 = pointer al bloque de parametros: [reason: u64, sub_code: u64]
+    // x0 = op number (0x18)
+    // x1 = pointer to parameters block: [reason: u64, sub_code: u64]
     const SYS_EXIT: u64 = 0x18;
 
     let params: [u64; 2] = [exit_code as u64, 0];
