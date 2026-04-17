@@ -9,15 +9,18 @@ use core::panic::PanicInfo;
 
 global_asm!(include_str!("boot.S"));
 
-use rpi_mini_os::framebuffer::{Color, FrameBuffer, fill_screen};
-use rpi_mini_os::graphics::draw_string_centered;
-use rpi_mini_os::serial_println;
+use rpi_mini_os::framebuffer::{Color, FrameBuffer, LineBuffer, fill_screen};
+use rpi_mini_os::graphics::{draw_string_centered, set_cursor};
 use rpi_mini_os::uart::Uart;
+use rpi_mini_os::{print, println, serial_println};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start_rust() -> ! {
     Uart::init();
     let _fb = FrameBuffer::init();
+
+    #[cfg(test)]
+    test_main();
 
     let init_text = "--- Kernel ARM64 Iniciado ---";
     let ver_text = "Version: 0.1.0";
@@ -46,10 +49,20 @@ pub extern "C" fn _start_rust() -> ! {
         },
     );
 
-    #[cfg(test)]
-    test_main();
+    set_cursor(8, 48);
 
-    loop {}
+    let mut txt: LineBuffer = LineBuffer::new();
+
+    loop {
+        let x = Uart.read_byte();
+
+        match x {
+            13 | 10 => {
+                print!("\n");
+            }
+            _ => print!("{}", x as char),
+        }
+    }
 }
 
 #[cfg(not(test))]

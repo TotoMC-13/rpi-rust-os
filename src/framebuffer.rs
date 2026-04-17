@@ -1,7 +1,9 @@
+use core::str;
+
 use lazy_static::lazy_static;
 use spin::Mutex;
 
-const P_BASE: u32 = 0x3F00_0000; // Peripheral Base Address)
+const P_BASE: u32 = 0x3F00_0000; // Peripheral Base Address
 const MAIL_BASE: u32 = P_BASE + 0xB880; // Mailbox base adress
 const MAIL_READ: *const u32 = MAIL_BASE as *const u32; // Mailbox read adress
 const MAIL_WRITE: *mut u32 = (MAIL_BASE + 0x20) as *mut u32; // Mailbox write adress
@@ -89,7 +91,7 @@ impl FrameBuffer {
             Self::mailbox_read(8);
         }
 
-        // We read the answr, if the code is now 0x8000_0000 everything went as expected
+        // We read the answer, if the code is now 0x8000_0000 everything went as expected
         if msj.buffer[1] == 0x8000_0000 {
             // Success
             // We go to the position in which we left the Allocate Buffer (index 11)
@@ -178,4 +180,46 @@ pub fn draw_pixel(x: u32, y: u32, color: &Color) {
 
 lazy_static! {
     pub static ref FRAMEBUFFER: Mutex<Option<FrameBuffer>> = Mutex::new(None);
+}
+
+const MAX_LINE_LEN: usize = 126;
+
+pub struct LineBuffer {
+    buffer: [u8; MAX_LINE_LEN],
+    len: usize,
+}
+
+impl LineBuffer {
+    pub const fn new() -> Self {
+        LineBuffer {
+            buffer: [0; MAX_LINE_LEN],
+            len: 0,
+        }
+    }
+
+    pub fn push(&mut self, byte: u8) -> Result<(), &'static str> {
+        if self.len < MAX_LINE_LEN {
+            self.buffer[self.len] = byte;
+            self.len += 1;
+            Ok(())
+        } else {
+            Err("Buffer is Full")
+        }
+    }
+
+    pub fn pop(&mut self) {
+        if self.len > 0 {
+            self.len -= 1;
+        }
+    }
+
+    // Return contnet as a slice
+    pub fn as_str(&self) -> Result<&str, str::Utf8Error> {
+        str::from_utf8(&self.buffer[..self.len])
+    }
+
+    // Clear buffer
+    pub fn clear(&mut self) {
+        self.len = 0;
+    }
 }
