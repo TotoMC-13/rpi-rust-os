@@ -22,7 +22,39 @@ pub fn draw_char(x: u32, y: u32, ch: char, color: &Color) {
     }
 }
 
-pub struct Console {
+pub fn erase_char(x: u32, y: u32, bg_color: &Color) {
+    for row in 0..8 {
+        for col in 0..8 {
+            draw_pixel(x + col as u32, y + row as u32, bg_color);
+        }
+    }
+}
+
+pub fn display_cursor(x: u32, y: u32, color_texto: &Color, color_fondo: &Color, visible: bool) {
+    let cursor_glyph: [u8; 8] = [0, 0, 0, 0, 0, 0, 0b11111111, 0b11111111];
+    for (row, row_byte) in cursor_glyph.iter().enumerate() {
+        for col in 0..8 {
+            if (*row_byte & (1 << col)) != 0 {
+                let pos_x = x + col as u32;
+                let pos_y = y + row as u32;
+                let color_a_pintar = if visible { color_texto } else { color_fondo };
+                draw_pixel(pos_x, pos_y, color_a_pintar);
+            }
+        }
+    }
+}
+
+pub fn draw_cursor() {
+    let gc = GRAPHICS_CONSOLE.lock();
+    display_cursor(gc.x, gc.y, &Color::new(255, 255, 255), &Color::new(0, 0, 255), true);
+}
+
+pub fn erase_cursor() {
+    let gc = GRAPHICS_CONSOLE.lock();
+    erase_char(gc.x, gc.y, &Color::new(0, 0, 255));
+}
+
+pub struct GraphicsConsole {
     pub x: u32,
     pub y: u32,
     pub fg_color: Color,
@@ -31,7 +63,7 @@ pub struct Console {
     pub x_margin: u32,
 }
 
-impl Console {
+impl GraphicsConsole {
     pub fn init(
         x: u32,
         y: u32,
@@ -39,8 +71,8 @@ impl Console {
         x_spacing: u32,
         y_spacing: u32,
         x_margin: u32,
-    ) -> Result<Console, &'static str> {
-        Ok(Console {
+    ) -> Result<GraphicsConsole, &'static str> {
+        Ok(GraphicsConsole {
             x,
             y,
             fg_color,
@@ -51,7 +83,7 @@ impl Console {
     }
 }
 
-impl fmt::Write for Console {
+impl fmt::Write for GraphicsConsole {
     fn write_str(&mut self, text: &str) -> fmt::Result {
         for ch in text.chars() {
             if ch == '\n' {
@@ -80,13 +112,8 @@ impl fmt::Write for Console {
     }
 }
 
-lazy_static! {
-    pub static ref CONSOLE: Mutex<Console> =
-        Mutex::new(Console::init(8, 16, Color::new(255, 255, 255), 8, 16, 8).unwrap());
-}
-
 pub fn set_cursor(x: u32, y: u32) {
-    let mut console = CONSOLE.lock();
+    let mut console = GRAPHICS_CONSOLE.lock();
     console.x = x;
     console.y = y;
 }
@@ -113,9 +140,14 @@ pub fn draw_string_centered(y: u32, txt: &str, color: &Color) {
     draw_string(centered_x, y, txt, color);
 }
 
+lazy_static! {
+    pub static ref GRAPHICS_CONSOLE: Mutex<GraphicsConsole> =
+        Mutex::new(GraphicsConsole::init(8, 8, Color::new(255, 255, 255), 8, 16, 8).unwrap());
+}
+
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
-    CONSOLE.lock().write_fmt(args).unwrap();
+    GRAPHICS_CONSOLE.lock().write_fmt(args).unwrap();
 }
 
 #[macro_export]

@@ -18,7 +18,7 @@ impl Uart {
             core::ptr::write_volatile(UART0_CR, 0);
 
             // Turn on: Bit 0 (Enable), Bit 8 (TXE), Bit 9 (RXE)
-            // Its equal top hexadecimal 0x301
+            // Its equal to 0x301
             let bits_encendido = (1 << 0) | (1 << 8) | (1 << 9);
             core::ptr::write_volatile(UART0_CR, bits_encendido);
         }
@@ -74,3 +74,4 @@ macro_rules! serial_println {
     () => ($crate::serial_print!("\n"));
     ($($arg:tt)*) => ($crate::serial_print!("{}\n", format_args!($($arg)*)));
 }
+

@@ -7,6 +7,7 @@
 use crate::uart::Uart;
 use core::panic::PanicInfo;
 
+pub mod console;
 pub mod framebuffer;
 pub mod graphics;
 pub mod uart;
